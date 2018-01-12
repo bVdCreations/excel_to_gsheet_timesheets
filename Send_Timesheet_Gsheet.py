@@ -1,6 +1,5 @@
 import gspread
 from oauth2client.service_account import ServiceAccountCredentials
-from Read_Timesheet import ReadTimeSheets
 
 
 class TimeSheetToGsheet:
@@ -32,10 +31,10 @@ class TimeSheetToGsheet:
             print("create the worksheet")
 
     def create_new_timesheet(self):
+        # this method creates a new sheet and places the heading for the timesheet
         if self._name not in self.get_sheetnames():
             sheet = self._workfile.add_worksheet(self._name, 30, 15)
             name_split = self._name.split(' ')
-            print(name_split)
             cells = {'A1': 'Employee', 'B1': 'Bastiaan Van Denabeele', 'C1': 'Initials', 'D1': 'BVD', 'E1': 'Number',
                      'F1': '51', 'A2': 'Year', 'B2': name_split[2], 'C2': 'Week', 'D2': name_split[1],
                      'A4': 'Type of activity', 'B4': 'Date', 'C4': 'From', 'D4': 'Until', 'E4': 'Project',
@@ -62,13 +61,10 @@ class TimeSheetToGsheet:
         return sheet
 
     def update_timesheet(self):
+        # this puts the readed data from the excel in the rights cell in the sheet in the spreadsheet
         for key_update, value_update in self._time_sheet_input.items():
-            print(key_update, value_update)
             self.open_timesheet().update_acell(key_update, value_update)
 
 
 if __name__ == "__main__":
-
-    for key, value in ReadTimeSheets().get_sheet_input().items():
-        TimeSheetToGsheet(key, value)
-
+    pass
