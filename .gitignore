@@ -6,6 +6,18 @@ __pycache__/
 # C extensions
 *.so
 
+# Intellij
+*.iml
+.idea/workspace.xml
+.idea/tasks.xml
+.idea/gradle.xml
+.idea/misc.xml
+.idea/modules.xml
+.idea/vcs.xml
+.idea/dictionaries
+.idea/libraries
+.idea/excel_to_gsheet_timesheets.iml
+
 # Distribution / packaging
 .Python
 env/
@@ -99,3 +111,8 @@ ENV/
 
 # mypy
 .mypy_cache/
+
+# Google Services (e.g. APIs or Firebase)
+*google-services.json
+*.json
+
