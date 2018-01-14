@@ -54,7 +54,6 @@ class TimeSheetToGsheet:
         else:
             raise AttributeError("trying to create a sheet that already exists")
 
-
     def open_timesheet(self, ):
         if self._name in self.get_sheetnames():
             # open sheet
@@ -78,7 +77,6 @@ class TimeSheetToGsheet:
             row += 1
         return last_entry_row
 
-
     def get_last_entry_column_timesheet(self, start_column=1):
         # find the column number of the last entry the given row
         column = start_column
@@ -87,7 +85,6 @@ class TimeSheetToGsheet:
             last_entry_column = column
             column += 1
         return last_entry_column
-
 
     def open_day_summary(self):
 
@@ -107,7 +104,7 @@ class TimeSheetToGsheet:
 
             for item in self._day_summary.values():
                 for key_cell, value_cell in item.items():
-                    sheet.update_acell((value_cell+'1'), (key_cell))
+                    sheet.update_acell((value_cell+'1'), key_cell)
 
             return sheet
         else:
@@ -130,12 +127,13 @@ class TimeSheetToGsheet:
 
         # loop true al input value rows in timesheet
         for row in range(5, self.get_last_entry_row_timesheet()+1):
+            # define the cell coordinates in the sheet day summary
+            day = self.day_of_week(timesheet.cell(row=row, col=2).value)
+            key_formula = self._day_summary.get("days").get(day) + column_position
             # check if the activity (located in the A column) is a working activitiy
-            if type_of_activity.get(timesheet.cell(row=row, col=1).value) in ["Working", "Day off",
+            if type_of_activity.get(timesheet.cell(row=row, col=1).value) in ["Working",
                                                                               "SLA Fee", "Training"]:
                 # check if the key is already in dict
-                day =self.day_of_week(timesheet.cell(row=row, col=2).value)
-                key_formula= self._day_summary.get("days").get(day)+column_position
                 if key_formula in summary_formulas.keys():
                     # update the formula
                     oldform = summary_formulas[key_formula]
@@ -145,28 +143,36 @@ class TimeSheetToGsheet:
                 else:
                     # create the formula
                     summary_formulas[key_formula] = "=(({}-{}) )*24".format("'"+self._name + "'!D" + str(row),
-                                                                    "'" + self._name + "'!C" + str(row))
+                                                                            "'" + self._name + "'!C" + str(row))
+            elif type_of_activity.get(timesheet.cell(row=row, col=1).value) == "Day Off":
+                if timesheet.cell(row=row, col=1).value == "Day off (special reason, describe in comments)":
+                    summary_formulas[key_formula] = "read the comment for more info"
+                else:
+                    summary_formulas[key_formula] = 8
+                    print("the day is {}".format(day))
+                    print("key_formula is {}".format(key_formula))
+
         # add the extra
         summary_formulas['A'+column_position] = self._name
+
+        print("-"*50)
+        print("name {}".format(self._name))
+        print("summary formulas")
+        print(summary_formulas)
+        print('-'*50)
 
         return summary_formulas
 
     @staticmethod
-    def day_of_week( time):
+    def day_of_week(time):
         dayoftheweek = datetime.datetime.strptime(time, '%Y-%m-%d %H:%M:%S').strftime('%A')
         return dayoftheweek
 
-    def load_type_of_acticity(self):
+    @staticmethod
+    def load_type_of_acticity():
         with open("type_of_activity.json") as json_data:
             type_of_activity = json.load(json_data)
         return type_of_activity
-
-    def test(self):
-        spreadsheet = self._client.open("Timesheets 2017")
-        sheet = spreadsheet.worksheet("week 50 2017")
-        for i in range(5,30):
-            print(sheet.cell(row=i , col=2).value)
-            print(self.day_of_week( sheet.cell(row=i, col=2).value))
 
 
 if __name__ == "__main__":
