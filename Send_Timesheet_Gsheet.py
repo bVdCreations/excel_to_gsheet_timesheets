@@ -1,5 +1,7 @@
 import gspread
 from oauth2client.service_account import ServiceAccountCredentials
+import json
+import datetime
 
 
 class TimeSheetToGsheet:
@@ -10,9 +12,12 @@ class TimeSheetToGsheet:
         self._creden = ServiceAccountCredentials.from_json_keyfile_name('TimeSheetsToDrive.json', self._scope)
         self._client = gspread.authorize(self._creden)
         self._time_sheet_input = update_input
-        self._name = name
+        self._name = name.lower()
         self._workfile = self.open_spreadsheet()
         self.update_timesheet()
+        self._day_summary = {'days': {'Monday': 'B', 'Tuesday': 'C', 'Wednesday': 'D', 'Thursday': 'E', 'Friday': 'F',
+                                      'Saturday': 'G', 'Sunday': 'H'},
+                             'extra_info': {'Total': 'J', 'Extra hours': 'K', 'Average': 'L'}}
 
     def get_sheetnames(self):
         # return a list with the names of all the sheets in the file
@@ -49,15 +54,13 @@ class TimeSheetToGsheet:
             raise AttributeError("trying to create a sheet that already exists")
 
 
-    def open_timesheet(self):
-
+    def open_timesheet(self, ):
         if self._name in self.get_sheetnames():
             # open sheet
             sheet = self._workfile.worksheet(self._name)
         else:
             # create sheet
             sheet = self.create_new_timesheet()
-
         return sheet
 
     def update_timesheet(self):
@@ -65,6 +68,105 @@ class TimeSheetToGsheet:
         for key_update, value_update in self._time_sheet_input.items():
             self.open_timesheet().update_acell(key_update, value_update)
 
+    def get_last_entry_row_timesheet(self):
+        # find the row number of the last entry in the given column
+        row = 5
+        last_entry_row = row
+        while self.open_timesheet().cell(col=1, row=row).value != '':
+            last_entry_row = row
+            row += 1
+        return last_entry_row
+
+    def get_last_entry_column_timesheet(self, start_column=1):
+        # find the column number of the last entry the given row
+        column = start_column
+        last_entry_column = column
+        while self.open_timesheet().cell(col=column, row=4).value != '':
+            last_entry_column = column
+            column += 1
+        return last_entry_column
+
+
+    def open_day_summary(self):
+
+        if "Day_Summary" in self.get_sheetnames():
+            # open sheet
+            sheet = self._workfile.worksheet("Day_Summary")
+        else:
+            # create sheet
+            sheet = self.create_new_day_summary()
+
+        return sheet
+
+    def create_new_day_summary(self):
+        # this method creates a new sheet and places the heading for the day summary sheet
+        if "Day_Summary" not in self.get_sheetnames():
+            sheet = self._workfile.add_worksheet("Day_Summary", 60, 15)
+
+            for item in self._day_summary.values():
+                for key_cell, value_cell in item.items():
+                    sheet.update_acell((value_cell+'1'), (key_cell))
+
+            return sheet
+        else:
+            raise AttributeError("trying to create a sheet that already exists")
+
+    def update_summary_day(self):
+        sheet_day_summary = self.open_day_summary()
+        for key_update, value_update in self.create_summary_formulas().items():
+            sheet_day_summary.update_acell(key_update, value_update)
+
+    def create_summary_formulas(self):
+
+        summary_formulas = dict()
+
+        type_of_activity = self.load_type_of_acticity()
+        timesheet = self.open_timesheet()
+
+        number_week = self._name.split(' ')[1]
+        column_position = str(int(number_week) + 1)
+
+        # loop true al input value rows in timesheet
+        for row in range(5, self.get_last_entry_row_timesheet()+1):
+            # check if the activity (located in the A column) is a working activitiy
+            if type_of_activity.get(timesheet.cell(row=row, col=1).value) in ["Working", "Day off",
+                                                                              "SLA Fee", "Training"]:
+                # check if the key is already in dict
+                day =self.day_of_week(timesheet.cell(row=row, col=2).value)
+                key_formula= self._day_summary.get("days").get(day)+column_position
+                if key_formula in summary_formulas.keys():
+                    # update the formula
+                    oldform = summary_formulas[key_formula]
+                    newform = oldform[:-4] + "+({}-{}) ".format("'"+self._name + "'!D" + str(row),
+                                                                "'" + self._name + "'!C" + str(row)) + ")*24"
+                    summary_formulas[key_formula] = newform
+                else:
+                    # create the formula
+                    summary_formulas[key_formula] = "=(({}-{}) )*24".format("'"+self._name + "'!D" + str(row),
+                                                                    "'" + self._name + "'!C" + str(row))
+        # add the extra
+        summary_formulas['A'+column_position] = self._name
+
+        return summary_formulas
+
+    @staticmethod
+    def day_of_week( time):
+        dayoftheweek = datetime.datetime.strptime(time, '%Y-%m-%d %H:%M:%S').strftime('%A')
+        return dayoftheweek
+
+    def load_type_of_acticity(self):
+        with open("type_of_activity.json") as json_data:
+            type_of_activity = json.load(json_data)
+        return type_of_activity
+
+    def test(self):
+        spreadsheet = self._client.open("Timesheets 2017")
+        sheet = spreadsheet.worksheet("week 50 2017")
+        for i in range(5,30):
+            print(sheet.cell(row=i , col=2).value)
+            print(self.day_of_week( sheet.cell(row=i, col=2).value))
+
 
 if __name__ == "__main__":
-    pass
+    rt= TimeSheetToGsheet("week 50 2017",dict())
+    rt.test()
