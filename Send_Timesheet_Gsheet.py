@@ -1,5 +1,6 @@
 import gspread
 from oauth2client.service_account import ServiceAccountCredentials
+
 import json
 import datetime
 
@@ -76,6 +77,7 @@ class TimeSheetToGsheet:
             last_entry_row = row
             row += 1
         return last_entry_row
+
 
     def get_last_entry_column_timesheet(self, start_column=1):
         # find the column number of the last entry the given row
@@ -168,5 +170,4 @@ class TimeSheetToGsheet:
 
 
 if __name__ == "__main__":
-    rt= TimeSheetToGsheet("week 50 2017",dict())
-    rt.test()
+    pass
