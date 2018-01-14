@@ -149,17 +149,15 @@ class TimeSheetToGsheet:
                     summary_formulas[key_formula] = "read the comment for more info"
                 else:
                     summary_formulas[key_formula] = 8
-                    print("the day is {}".format(day))
-                    print("key_formula is {}".format(key_formula))
 
         # add the extra
+        summary_formulas[self._day_summary.get('extra_info').get('Extra hours') + column_position] = \
+            "=J{}-8*{}".format(column_position, len(summary_formulas))
+        summary_formulas[self._day_summary.get('extra_info').get('Total') + column_position] =\
+            "=SUM(B{}:H{})".format(column_position, column_position)
+        summary_formulas[self._day_summary.get('extra_info').get('Average') + column_position] = \
+            "=AVERAGE(B{}:H{})".format(column_position, column_position)
         summary_formulas['A'+column_position] = self._name
-
-        print("-"*50)
-        print("name {}".format(self._name))
-        print("summary formulas")
-        print(summary_formulas)
-        print('-'*50)
 
         return summary_formulas
 
