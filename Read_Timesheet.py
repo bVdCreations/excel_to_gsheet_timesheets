@@ -11,9 +11,8 @@ class FindFiles:
         self._user = "Bastiaan Van Denabeele"
         self._files = dict()
 
-
     def get_folder_list(self):
-        #returns a list of all the files in the selected folder
+        # returns a list of all the files in the selected folder
         return os.listdir(self._patch)
 
     def find_excel(self):
@@ -61,7 +60,6 @@ class ReadTimeSheets:
         # find the maximum range of data in the sheet
         return self.get_last_entry_column(sheet_object, row=4) + str(self.get_last_entry_row(sheet_object, start_row=5))
 
-
     @staticmethod
     def get_last_entry_row(sheet_object: openpyxl, start_row=1, column=1):
         # find the row number of the last entry in the given column
@@ -94,7 +92,7 @@ class ReadTimeSheets:
 
         activity_sheet = openpyxl.load_workbook(patch).get_sheet_by_name('TypeOfActivity')
 
-        for i in range(2,self.get_last_entry_row(activity_sheet)):
+        for i in range(2, self.get_last_entry_row(activity_sheet)):
             column = 2
 
             while activity_sheet.cell(column=column, row=i).value is not None \
