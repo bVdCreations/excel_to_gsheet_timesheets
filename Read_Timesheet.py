@@ -43,17 +43,25 @@ class ReadTimeSheets:
         return returndict
 
     def get_sheet_input(self):
-        # returns a dict with the als key the week and year of the file
+        """get the sheet input from the timesheet
+
+        :return: a dict with al the input sorted by year and by timesheet
+        """
+        # returns a dict with the as key the week and year of the file
         # as value a dict
         # In that dict the key are the coordinates of the cells en the value the values of the cells
         sheet_inputs = dict()
-        for key, value in self.get_sheets().items():
-            sheet_inputs.update({key: dict()})
-            for rowOfCellObjects in value['A5':self.get_last_entry_timesheet(value)]:
+        for sheet_title, sheet_object in self.get_sheets().items():
+            sheet_year = sheet_title.split(" ")[2]
+            if sheet_year not in sheet_inputs.keys():
+                sheet_inputs[sheet_year] = {sheet_title: dict()}
+            else:
+                sheet_inputs[sheet_year].update({sheet_title: dict()})
+
+            for rowOfCellObjects in sheet_object['A5':self.get_last_entry_timesheet(sheet_object)]:
                 for cellObj in rowOfCellObjects:
                     if cellObj.value is not None:
-                        sheet_inputs.get(key).update({cellObj.coordinate: cellObj.value})
-
+                        sheet_inputs[sheet_year].get(sheet_title).update({cellObj.coordinate: cellObj.value})
         return sheet_inputs
 
     def get_last_entry_timesheet(self, sheet_object: openpyxl):
@@ -110,5 +118,5 @@ class ReadTimeSheets:
 
 
 if __name__ == "__main__":
-    rt = ReadTimeSheets()
-    rt.update_type_of_activity_json()
+    pass
+
