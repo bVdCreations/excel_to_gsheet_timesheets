@@ -1,0 +1,14 @@
+This document is meant to keep track off all the features 
+that has to be added or changed.
+
+
+features to add
+
+	GUI interface
+		browse file
+		
+	.exe file
+
+
+features to update
+
