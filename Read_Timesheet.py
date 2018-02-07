@@ -5,6 +5,7 @@ from openpyxl.utils import get_column_letter
 
 
 class FindFiles:
+    """Finds the excell file with the titles "Timesheet - {username} - Week{number of week}" """
 
     def __init__(self):
         self._patch = "C:\\Users\\bVd\\Desktop\\"
@@ -12,12 +13,16 @@ class FindFiles:
         self._files = dict()
 
     def get_folder_list(self):
-        # returns a list of all the files in the selected folder
+        """
+        :return: returns a list of all the files in the selected folder
+        """
         return os.listdir(self._patch)
 
     def find_excel(self):
-        # returns and updates a dict with the als key the week and year of the file
-        # as value the pacth of the located file
+        """returns and updates a dict with the als key the week and year of the file
+        as value the pacth of the located file
+        """
+
         for file in self.get_folder_list():
             if "Timesheet - {} - Week".format(self._user)in file:
                 key = file.split(" - ")[2].split(".")[0]
@@ -26,7 +31,9 @@ class FindFiles:
 
 
 class ReadTimeSheets:
-
+    """
+    Read the input of the found excel files
+    """
     def __init__(self):
         self._file_list_dict = FindFiles().find_excel()
         self._time_sheet_input = dict()
@@ -35,8 +42,9 @@ class ReadTimeSheets:
         return self._file_list_dict
 
     def get_sheets(self):
-        # returns a dict with the als key the week and year of the file
-        # as value the sheet 'Timesheet' of the excel file
+        """returns a dict with the als key the week and year of the file
+         as value the sheet 'Timesheet' of the excel file
+        """
         returndict = dict()
         for keys, value in self._file_list_dict.items():
             returndict.update({keys: openpyxl.load_workbook(value).get_sheet_by_name('Timesheet')})
@@ -65,7 +73,12 @@ class ReadTimeSheets:
         return sheet_inputs
 
     def get_last_entry_timesheet(self, sheet_object: openpyxl):
-        # find the maximum range of data in the sheet
+        """find the maximum range of data in the sheet for a timesheet
+
+        :param sheet_object: sheet timesheet
+        :return: the column letter and row number
+        """
+
         return self.get_last_entry_column(sheet_object, row=4) + str(self.get_last_entry_row(sheet_object, start_row=5))
 
     @staticmethod
@@ -89,6 +102,7 @@ class ReadTimeSheets:
         return get_column_letter(last_entry_column)
 
     def get_type_of_activity_data(self, file_week=''):
+        """ updates a the json file with the type of activity"""
 
         type_of_activity = dict()
 
