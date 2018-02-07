@@ -6,8 +6,15 @@ import datetime
 
 
 class ToGsheet:
+    """ connect to the worksheet given by year
+    the worksheets are named Timesheets {year}
 
+    """
     def __init__(self, year=2018):
+        """
+
+        :param year: open the workfile given by year
+        """
 
         self._scope = ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/drive']
         self._creden = ServiceAccountCredentials.from_json_keyfile_name('TimeSheetsToDrive.json', self._scope)
@@ -15,7 +22,7 @@ class ToGsheet:
         self._year = year
         self._workfile = self.open_workfile()
 
-    def set_year(self, year:int()):
+    def set_year(self, year: int()):
         """sets the year of the object"""
         self._year = year
 
@@ -23,7 +30,7 @@ class ToGsheet:
         """:return: the year"""
         return self._year
 
-    def get_sheetnames(self):
+    def _get_sheetnames(self):
         """looks for all the sheets names of the current workfile
 
         :return: a list with all the sheets names
@@ -47,24 +54,34 @@ class ToGsheet:
         except:
             print("create the worksheet")
 
-    def update_timesheets(self,input_timesheets: dict()):
+    def update_timesheets(self, input_timesheets: dict()):
+        """update the timesheets given by input
+
+        :param input_timesheets: dict {title sheet:{postion cell : value cell ,...:...}, ...:... }
+        :return: None
+        """
 
         for title_timesheets, values_timesheet in input_timesheets.items():
             Timesheet(title_timesheets).update_timesheet(values_timesheet)
 
 
-
-
 class Timesheet(ToGsheet):
 
     def __init__(self, title_timesheet):
+        """open a timesheet
+
+        :param title_timesheet: title of the timesheet
+        """
         super().__init__()
         self._title_timesheet = title_timesheet.lower()
         self._timesheet = self._open_timesheet()
 
     def _create_new_timesheet(self):
-        # this method creates a new sheet and places the heading for the timesheet
-        if self._title_timesheet not in self.get_sheetnames():
+        """this method creates a new sheet and places the heading for the timesheet
+
+        :return: the created sheet
+        """
+        if self._title_timesheet not in self._get_sheetnames():
             sheet = self._workfile.add_worksheet(self._title_timesheet, 30, 15)
             name_split = self._title_timesheet.split(' ')
             cells = {'A1': 'Employee', 'B1': 'Bastiaan Van Denabeele', 'C1': 'Initials', 'D1': 'BVD', 'E1': 'Number',
@@ -85,7 +102,7 @@ class Timesheet(ToGsheet):
 
         :return: returns the opened or created sheet
         """
-        if self._title_timesheet in self.get_sheetnames():
+        if self._title_timesheet in self._get_sheetnames():
             # open sheet
             sheet = self._workfile.worksheet(self._title_timesheet)
         else:
@@ -147,6 +164,7 @@ class Timesheet(ToGsheet):
 
 
 class DaySummary(ToGsheet):
+    """is a subclass of ToGheet and handels everything that has to deal with the  sheet "Day summary" """
 
     def __init__(self):
         super().__init__()
@@ -155,8 +173,12 @@ class DaySummary(ToGsheet):
                              'extra_info': {'Total': 'J', 'Extra hours': 'K', 'Average': 'L'}}
 
     def open_day_summary(self):
+        """ if the sheet "Day summary" is exits it opens it
+         if not it creates the sheet
 
-        if "Day_Summary" in self.get_sheetnames():
+        :return:the sheet "Day summary"
+        """
+        if "Day_Summary" in self._get_sheetnames():
             # open sheet
             sheet = self._workfile.worksheet("Day_Summary")
         else:
@@ -166,8 +188,12 @@ class DaySummary(ToGsheet):
         return sheet
 
     def create_new_day_summary(self):
-        # this method creates a new sheet and places the heading for the day summary sheet
-        if "Day_Summary" not in self.get_sheetnames():
+        """this method creates a new sheet and places the heading for the day summary sheet
+
+        :return: sheet "Day summary"
+        """
+
+        if "Day_Summary" not in self._get_sheetnames():
             sheet = self._workfile.add_worksheet("Day_Summary", 60, 15)
 
             for item in self._day_summary.values():
@@ -182,8 +208,7 @@ class DaySummary(ToGsheet):
         """updates the summary formulas in the sheet 'day_summary' in a given week
 
         :param week: the number of the week
-        :param year: the year
-        :return:
+        :return: None
         """
         sheet_day_summary = self.open_day_summary()
         for key_update, value_update in \
@@ -194,7 +219,6 @@ class DaySummary(ToGsheet):
         """greates a dict with the gsheets formula's for the spefic week
 
         :param week: the number of the week
-        :param year: the year
         :return: dict with the formula's
         """
 
