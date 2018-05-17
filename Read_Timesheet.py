@@ -7,7 +7,7 @@ from openpyxl.utils import get_column_letter
 class FindFiles:
 
     def __init__(self):
-        self._patch = "C:\\Users\\bVd\\Desktop\\"
+        self._patch = "D:\\Desktop\\"
         self._user = "Bastiaan Van Denabeele"
         self._files = dict()
 
