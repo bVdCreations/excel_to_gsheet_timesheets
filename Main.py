@@ -7,7 +7,7 @@ if __name__ == "__main__":
     
     print('started')
     for year, timesheets_input in ReadTimeSheets().get_sheet_input().items():
-        
+        print('updating')
         ToGsheet(year).update_timesheets(timesheets_input)
         print('updated the sheet {} to gheet {}'.format(timesheets_input.keys() ,year))
         for key in timesheets_input.keys():
